@@ -1,0 +1,37 @@
+# ============================================
+# Multi-Agent Trading Bot — Python Dependencies
+# ============================================
+
+# --- Market Data Feeds ---
+yfinance>=0.2.31            # Indian equities OHLCV (NSE/BSE via Yahoo Finance)
+ccxt>=4.3.0                 # Crypto exchange unified API (Binance, Delta, Bybit, KuCoin)
+
+# --- Technical Analysis ---
+pandas>=2.1.0               # Dataframes & time-series manipulation
+numpy>=1.26.0               # Numerical computation
+ta>=0.11.0                  # Technical analysis indicators (RSI, MACD, Bollinger, ATR)
+
+# --- Sentiment Analysis (LLM) ---
+google-genai>=1.0.0         # Google Gemini AI SDK for sentiment analysis
+feedparser>=6.0.11          # RSS/Atom news feed parser
+
+# --- Web Backend (Render Deployment / UI) ---
+fastapi>=0.111.0            # Async REST API framework
+uvicorn>=0.30.0             # ASGI server for FastAPI
+streamlit>=1.35.0           # Dashboard Web UI
+
+# --- Utilities ---
+python-dotenv>=1.0.1        # .env file loader for API keys
+httpx>=0.27.0               # Async HTTP client for news fetching
+pydantic>=2.7.0             # Data validation & structured outputs
+
+# --- New: Multi-Source Sentiment & Fundamentals ---
+praw>=7.7.1                # Reddit API (Free 100 req/min)
+ntscraper>=0.3.11           # Free Twitter/X scraper via Nitter
+pycoingecko>=3.1.0          # Free CoinGecko API for crypto fundamentals
+beautifulsoup4>=4.12.3      # HTML scraping for forums and StockTwits
+
+# --- New: Machine Learning & Data Science ---
+scikit-learn>=1.4.0         # ML algorithms and data splitting
+xgboost>=2.0.3              # Gradient boosting for ML Agent
+pandas-ta>=0.3.14           # Technical analysis features for ML

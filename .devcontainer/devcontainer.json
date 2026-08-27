@@ -1,0 +1,29 @@
+{
+  "name": "Trading Bot Codespace",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "features": {},
+  
+  "onCreateCommand": "pip install --upgrade pip",
+  "postCreateCommand": "pip install -r requirements.txt",
+  
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.formatting.provider": "black"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ]
+    }
+  },
+  
+  "forwardPorts": [8501, 8000],
+  "portsAttributes": {
+    "8501": {
+      "label": "Streamlit Dashboard",
+      "onAutoForward": "openPreview"
+    }
+  }
+}
