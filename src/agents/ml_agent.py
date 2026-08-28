@@ -1,84 +1,112 @@
 """
-Agent 7: Machine Learning Brain (XGBoost)
-=========================================
+Agent 7: Machine Learning Brain (XGBoost with Caching)
+=====================================================
 Trains an XGBoost gradient boosting model on raw features to 
 mathematically predict the direction of the next candle.
+Caches predictions so CPU usage stays near 0% on repeat runs.
 """
 
+import os
+import json
+import time
 import pandas as pd
 import numpy as np
+
 try:
-    import pandas_ta as ta
+    import ta
     import xgboost as xgb
     from sklearn.model_selection import train_test_split
     ML_AVAILABLE = True
 except ImportError:
     ML_AVAILABLE = False
 
+CACHE_DIR = ".cache/ml"
+CACHE_TTL = 6 * 3600  # Cache prediction for 6 hours per symbol
+
+def _get_cache_file(symbol: str) -> str:
+    clean_sym = symbol.replace(":", "_").replace("/", "_").replace(".", "_")
+    return os.path.join(CACHE_DIR, f"{clean_sym}.json")
+
+def _load_cache(symbol: str) -> dict | None:
+    filepath = _get_cache_file(symbol)
+    if os.path.exists(filepath):
+        try:
+            with open(filepath, "r") as f:
+                data = json.load(f)
+            if time.time() - data.get("timestamp", 0) < CACHE_TTL:
+                return data.get("result")
+        except Exception:
+            pass
+    return None
+
+def _save_cache(symbol: str, result: dict):
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    filepath = _get_cache_file(symbol)
+    try:
+        with open(filepath, "w") as f:
+            json.dump({"timestamp": time.time(), "result": result}, f, indent=2)
+    except Exception as e:
+        print(f"   ⚠️ Could not save ML cache for {symbol}: {e}")
+
 def extract_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Uses pandas-ta to extract 50+ technical features from OHLCV."""
+    """Uses ta library to extract technical features from OHLCV."""
     if df is None or len(df) < 50:
         return df
         
     df_features = df.copy()
     
-    # Core technicals
-    df_features.ta.rsi(length=14, append=True)
-    df_features.ta.macd(append=True)
-    df_features.ta.bbands(append=True)
-    df_features.ta.atr(append=True)
-    df_features.ta.stoch(append=True)
-    df_features.ta.obv(append=True)
-    df_features.ta.adx(append=True)
+    # Technical Indicators via standard 'ta' library
+    try:
+        df_features['RSI_14'] = ta.momentum.rsi(df_features['Close'], window=14)
+        df_features['MACD'] = ta.trend.macd(df_features['Close'])
+        df_features['MACD_signal'] = ta.trend.macd_signal(df_features['Close'])
+        df_features['BB_high'] = ta.volatility.bollinger_hband(df_features['Close'])
+        df_features['BB_low'] = ta.volatility.bollinger_lband(df_features['Close'])
+        df_features['ATR'] = ta.volatility.average_true_range(df_features['High'], df_features['Low'], df_features['Close'])
+        df_features['SMA_20'] = ta.trend.sma_indicator(df_features['Close'], window=20)
+        df_features['SMA_50'] = ta.trend.sma_indicator(df_features['Close'], window=50)
+    except Exception as e:
+        print(f"   ⚠️ Feature calculation warning: {e}")
     
     # Target Variable: 1 if next candle's close is higher than current close, else 0
     df_features['Target'] = (df_features['Close'].shift(-1) > df_features['Close']).astype(int)
     
-    # Drop rows with NaN (due to indicators like 14-period RSI taking time to calculate)
+    # Drop rows with NaN
     df_features.dropna(inplace=True)
     return df_features
 
-def analyze(df: pd.DataFrame, symbol: str) -> dict:
+def analyze(df: pd.DataFrame, symbol: str, force_retrain: bool = False) -> dict:
     """
     Trains XGBoost on the fly and predicts the next move.
+    Uses disk caching to prevent CPU overheating on repeat scans.
     """
     print(f"\n🧠 Agent 7: Running Machine Learning (XGBoost) for {symbol}...")
     
     if not ML_AVAILABLE:
-        print("   ⚠️ ML libraries (xgboost, scikit-learn, pandas-ta) not installed. Skipping.")
+        print("   ⚠️ ML libraries (xgboost, scikit-learn, ta) not installed. Skipping.")
         return {"action": "HOLD", "confidence": 0.0, "error": "Libraries not installed"}
         
+    # Check Cache First
+    if not force_retrain:
+        cached = _load_cache(symbol)
+        if cached:
+            print(f"   ⚡ Using Cached ML Prediction for {symbol} (0% CPU).")
+            return cached
+
     df_ml = extract_features(df)
     
     if len(df_ml) < 20:
         print("   ⚠️ Not enough data points for ML training.")
         return {"action": "HOLD", "confidence": 0.0, "error": "Insufficient data"}
         
-    # We want to predict the absolute LAST candle's future, so it's our test case
-    # Target for the last row is NaN because we shifted it, but dropna dropped it.
-    # We must predict on the unshifted last row.
-    
-    # Re-extract just for the current state (no shift)
-    current_features = df.copy()
-    current_features.ta.rsi(length=14, append=True)
-    current_features.ta.macd(append=True)
-    current_features.ta.bbands(append=True)
-    current_features.ta.atr(append=True)
-    current_features.ta.stoch(append=True)
-    current_features.ta.obv(append=True)
-    current_features.ta.adx(append=True)
-    
+    current_features = extract_features(df)
     last_row = current_features.iloc[-1:]
-    last_row = last_row.dropna(axis=1) # Drop the empty target or any fully NaN columns
     
-    # Prepare training data
     features = [col for col in df_ml.columns if col not in ['Target', 'Open', 'High', 'Low', 'Close', 'Volume']]
     
     X = df_ml[features]
     y = df_ml['Target']
     
-    # Train/Test split is mostly to prevent overfitting, but we'll train on the whole recent dataset
-    # since it's just a 60-day window and we want the most recent context.
     model = xgb.XGBClassifier(
         n_estimators=50,
         max_depth=3,
@@ -90,7 +118,6 @@ def analyze(df: pd.DataFrame, symbol: str) -> dict:
     try:
         model.fit(X, y)
         
-        # Predict the latest state
         X_latest = last_row[features]
         prob = model.predict_proba(X_latest)[0]
         
@@ -109,12 +136,11 @@ def analyze(df: pd.DataFrame, symbol: str) -> dict:
             
         print(f"   ✅ ML Prediction: {action} (Bull: {prob_bull:.1%}, Bear: {prob_bear:.1%})")
         
-        # Get top 3 most important features
         importance = model.feature_importances_
         feature_imp = pd.Series(importance, index=features).sort_values(ascending=False)
         top_features = feature_imp.head(3).index.tolist()
         
-        return {
+        result = {
             "action": action,
             "confidence": float(confidence),
             "prob_bull": float(prob_bull),
@@ -122,6 +148,9 @@ def analyze(df: pd.DataFrame, symbol: str) -> dict:
             "top_features": top_features,
             "model": "XGBoost Classifier"
         }
+        
+        _save_cache(symbol, result)
+        return result
     except Exception as e:
         print(f"   ❌ ML Training Error: {e}")
         return {"action": "HOLD", "confidence": 0.0, "error": str(e)}
