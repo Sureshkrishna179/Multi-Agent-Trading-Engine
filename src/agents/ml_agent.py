@@ -55,21 +55,21 @@ def extract_features(df: pd.DataFrame) -> pd.DataFrame:
         
     df_features = df.copy()
     
-    # Technical Indicators via standard 'ta' library
+    # Technical Indicators via standard 'ta' library (lowercase columns)
     try:
-        df_features['RSI_14'] = ta.momentum.rsi(df_features['Close'], window=14)
-        df_features['MACD'] = ta.trend.macd(df_features['Close'])
-        df_features['MACD_signal'] = ta.trend.macd_signal(df_features['Close'])
-        df_features['BB_high'] = ta.volatility.bollinger_hband(df_features['Close'])
-        df_features['BB_low'] = ta.volatility.bollinger_lband(df_features['Close'])
-        df_features['ATR'] = ta.volatility.average_true_range(df_features['High'], df_features['Low'], df_features['Close'])
-        df_features['SMA_20'] = ta.trend.sma_indicator(df_features['Close'], window=20)
-        df_features['SMA_50'] = ta.trend.sma_indicator(df_features['Close'], window=50)
+        df_features['rsi_14'] = ta.momentum.rsi(df_features['close'], window=14)
+        df_features['macd_val'] = ta.trend.macd(df_features['close'])
+        df_features['macd_sig'] = ta.trend.macd_signal(df_features['close'])
+        df_features['bb_high'] = ta.volatility.bollinger_hband(df_features['close'])
+        df_features['bb_low'] = ta.volatility.bollinger_lband(df_features['close'])
+        df_features['atr_val'] = ta.volatility.average_true_range(df_features['high'], df_features['low'], df_features['close'])
+        df_features['sma_20'] = ta.trend.sma_indicator(df_features['close'], window=20)
+        df_features['sma_50'] = ta.trend.sma_indicator(df_features['close'], window=50)
     except Exception as e:
         print(f"   ⚠️ Feature calculation warning: {e}")
     
     # Target Variable: 1 if next candle's close is higher than current close, else 0
-    df_features['Target'] = (df_features['Close'].shift(-1) > df_features['Close']).astype(int)
+    df_features['target'] = (df_features['close'].shift(-1) > df_features['close']).astype(int)
     
     # Drop rows with NaN
     df_features.dropna(inplace=True)
@@ -95,17 +95,17 @@ def analyze(df: pd.DataFrame, symbol: str, force_retrain: bool = False) -> dict:
 
     df_ml = extract_features(df)
     
-    if len(df_ml) < 20:
+    if df_ml is None or len(df_ml) < 20:
         print("   ⚠️ Not enough data points for ML training.")
         return {"action": "HOLD", "confidence": 0.0, "error": "Insufficient data"}
         
     current_features = extract_features(df)
     last_row = current_features.iloc[-1:]
     
-    features = [col for col in df_ml.columns if col not in ['Target', 'Open', 'High', 'Low', 'Close', 'Volume']]
+    features = [col for col in df_ml.columns if col not in ['target', 'open', 'high', 'low', 'close', 'volume']]
     
     X = df_ml[features]
-    y = df_ml['Target']
+    y = df_ml['target']
     
     model = xgb.XGBClassifier(
         n_estimators=50,

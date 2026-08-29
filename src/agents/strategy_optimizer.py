@@ -66,8 +66,8 @@ def prune_strategies(df: pd.DataFrame, force_retest: bool = False) -> dict:
     
     for i in test_range:
         window_df = df.iloc[:i+1]
-        current_price = window_df.iloc[-1]['Close']
-        next_price = df.iloc[i+1]['Close']
+        current_price = window_df.iloc[-1]['close']
+        next_price = df.iloc[i+1]['close']
         
         actual_move = 1 if next_price > current_price else -1
         
