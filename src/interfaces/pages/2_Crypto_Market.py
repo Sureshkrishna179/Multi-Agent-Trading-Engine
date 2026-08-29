@@ -27,10 +27,26 @@ col4.metric("Total Trades", portfolio['total_trades'])
 st.divider()
 
 # ── Execution Controls ──
-st.subheader("⚙️ Run 6-Agent Pipeline")
-if st.button("Scan Crypto Watchlist", type="primary"):
-    with st.spinner("Agents are analyzing the market..."):
-        for symbol in config.CRYPTO_WATCHLIST:
+st.subheader("⚙️ Run 8-Agent Pipeline")
+
+tab1, tab2 = st.tabs(["🔍 Analyze Any Custom Crypto", "📋 Scan Entire Watchlist"])
+
+with tab1:
+    custom_symbol = st.text_input("Enter Crypto Pair (e.g. DOGE/USDT, ADA/USDT, SOL/USDT, PEPE/USDT):", value="SOL/USDT")
+    if st.button("Analyze Crypto", type="primary", key="btn_custom_crypto"):
+        symbols_to_run = [custom_symbol.strip().upper()]
+    else:
+        symbols_to_run = []
+
+with tab2:
+    if st.button("Scan Full Watchlist", type="secondary", key="btn_watchlist_crypto"):
+        symbols_to_run = config.CRYPTO_WATCHLIST
+    elif 'symbols_to_run' not in locals():
+        symbols_to_run = []
+
+if symbols_to_run:
+    with st.spinner("Agents are analyzing market data..."):
+        for symbol in symbols_to_run:
             st.markdown(f"### Evaluating `{symbol}`")
             
             try:
