@@ -21,3 +21,14 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Media & Documents (keep locally, never push)
+*.mp4
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mov
+*.avi
+
