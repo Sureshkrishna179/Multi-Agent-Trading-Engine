@@ -27,7 +27,7 @@ col4.metric("Total Trades", portfolio['total_trades'])
 st.divider()
 
 # ── Execution Controls ──
-st.subheader("⚙️ Run 8-Agent Pipeline")
+st.subheader("⚙️ Run 8-Agent Pipeline with Consensus Voting")
 
 tab1, tab2 = st.tabs(["🔍 Analyze Any Custom Crypto", "📋 Scan Entire Watchlist"])
 
@@ -45,12 +45,11 @@ with tab2:
         symbols_to_run = []
 
 if symbols_to_run:
-    with st.spinner("Agents are analyzing market data..."):
+    with st.spinner("8 Agents are analyzing and voting..."):
         for symbol in symbols_to_run:
             st.markdown(f"### Evaluating `{symbol}`")
             
             try:
-                # Run the pipeline safely isolated to "crypto"
                 res = run_pipeline(symbol, "crypto")
                 
                 tech = res["agent_1_technical"]
@@ -61,29 +60,62 @@ if symbols_to_run:
                 strat = res["agent_3_strategy"]
                 debate = res["agent_6_debate"]
                 risk = res["agent_4_risk_execution"]["risk_validation"]
+                consensus = res.get("consensus", {})
                 
-                # Display Summary
-                st.write(f"**Alpha Optimizer**: 🧪 Tested {opt.get('total_tested',0)} | ✂️ Pruned {opt.get('pruned',0)} | ✅ Active Strategies: {opt.get('active_alpha_strategies',0)}")
+                # ── Consensus Score (Hero Metric) ──
+                score = consensus.get("consensus_score", 0)
+                action = consensus.get("consensus_action", "HOLD")
+                strength = consensus.get("strength", "WEAK")
+                
+                score_emoji = "🟢" if action == "BUY" else "🔴" if action == "SELL" else "⚪"
                 
                 c1, c2, c3, c4 = st.columns(4)
-                c1.metric("Trend", tech["trend"])
-                c2.metric("Sentiment", f"{sent['sentiment_score']}/100", sent["sentiment_label"])
-                
-                ml_conf = f"{ml.get('confidence', 0):.1%}" if ml.get('action') != 'HOLD' else "N/A"
-                c3.metric("ML Brain", ml.get('action', 'HOLD'), ml_conf)
+                c1.metric(f"{score_emoji} Consensus", action, f"Score: {score:.2f}")
+                c2.metric("Strength", strength)
+                c3.metric("Trend", tech["trend"])
                 
                 if risk["approved"]:
-                    c4.metric("Action", risk["action"], "APPROVED", delta_color="normal")
+                    c4.metric("Risk Guardian", "✅ APPROVED")
                 else:
-                    c4.metric("Action", risk["action"], "VETOED", delta_color="inverse")
+                    c4.metric("Risk Guardian", "🛑 VETOED")
                 
-                # Debate Toggle
+                # ── Agent Confidence Breakdown ──
+                with st.expander("📊 Agent Confidence Breakdown (How Each Agent Voted)"):
+                    votes = consensus.get("agent_votes", {})
+                    
+                    if votes:
+                        vote_data = []
+                        for agent_id, vote in votes.items():
+                            signal = vote["signal"]
+                            weight = vote["weight"]
+                            direction = "🟢 BULL" if signal > 0.05 else "🔴 BEAR" if signal < -0.05 else "⚪ NEUTRAL"
+                            vote_data.append({
+                                "Agent": vote["name"],
+                                "Vote": direction,
+                                "Signal": f"{signal:+.2f}",
+                                "Weight": f"{weight:.0%}",
+                                "Weighted": f"{signal * weight:+.3f}",
+                                "Details": vote["raw_data"],
+                            })
+                        
+                        df_votes = pd.DataFrame(vote_data)
+                        st.dataframe(df_votes, use_container_width=True, hide_index=True)
+                    
+                    st.caption(f"Final Weighted Consensus: **{score:+.4f}** → **{action}** ({strength})")
+                
+                # ── ML & Optimizer Quick View ──
+                ml_conf = f"{ml.get('confidence', 0):.1%}" if ml.get('action') != 'HOLD' else "N/A"
+                st.write(f"🧠 **ML Brain**: {ml.get('action', 'HOLD')} ({ml_conf}) | "
+                         f"📊 **Sentiment**: {sent.get('sentiment_score', 50)}/100 | "
+                         f"⚙️ **Optimizer**: {opt.get('active_alpha_strategies', 0)} active strategies")
+                
+                # ── Debate Toggle ──
                 with st.expander("⚖️ View Bull vs Bear Debate"):
                     st.write("**🐂 Bull Case:**", debate["bull_case"])
                     st.write("**🐻 Bear Case:**", debate["bear_case"])
                     st.write("**🏛️ Judge Decision:**", debate["judge_decision"])
                     
-                # Risk Toggle
+                # ── Risk Toggle ──
                 if not risk["approved"]:
                     st.error("Veto Reasons:\n" + "\n".join([f"- {r}" for r in risk["veto_reasons"]]))
                 else:

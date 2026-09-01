@@ -1,16 +1,19 @@
 """
 Multi-Agent Trading Bot — Core Execution Pipeline
 =================================================
-Runs the complete 6-agent pipeline for a single asset.
+Runs the complete 8-agent pipeline for a single asset.
+Now includes Weighted Consensus Engine for mathematically superior decisions.
 """
 
 from src.connectors import indian_market, crypto_market
 from src.agents import technical_agent, sentiment_agent, strategy_agent, risk_executor_agent, fundamental_agent, debate_agent, ml_agent, strategy_optimizer
 from src.agents.strategies import StrategyRegistry
+from src.agents.agent_charter import compute_consensus
 
 def run_pipeline(symbol: str, market_type: str) -> dict:
     """
-    Execute the full 6-agent trading pipeline for a single asset.
+    Execute the full 8-agent trading pipeline for a single asset.
+    Uses Weighted Consensus Engine for the final decision.
     """
     # ── Stage 1: Fetch Market Data ──────────────────────────────
     if market_type == "indian":
@@ -33,28 +36,17 @@ def run_pipeline(symbol: str, market_type: str) -> dict:
     ml_result = ml_agent.analyze(df, symbol)
     
     # ── Stage 3d: Agent 8 — Strategy Optimizer ──────────────────
-    # This runs the historical 30-day backtest to prune bad strategies
     opt_result = strategy_optimizer.prune_strategies(df)
 
-    # ── Stage 4: Agent 3 — Strategy Selection (Now using the Pruned Alpha 100) ──
+    # ── Stage 4: Agent 3 — Strategy Selection ───────────────────
     strat_result = strategy_agent.analyze(tech_result, sent_result, current_price, df=df)
-    # Inject ML bias into strat_result if ML is highly confident
-    if ml_result["confidence"] > 0.70:
-        strat_result["reasoning"] += f" | ML Overwrite: Very strong {ml_result['action']} prediction."
-        strat_result["action"] = ml_result["action"]
-        strat_result["confidence"] = max(strat_result["confidence"], ml_result["confidence"])
 
     # ── Stage 5: Agent 6 — Bull vs Bear Debate ──────────────────
     debate_result = debate_agent.debate(symbol, tech_result, sent_result, strat_result, fund_result)
-    
-    # Override strat_result action and confidence with Judge's decision
-    strat_result["action"] = debate_result.get("final_action", strat_result["action"])
-    strat_result["confidence"] = debate_result.get("final_confidence", strat_result["confidence"])
-    
-    # ── Stage 6: Agent 4 — Risk & Execution ─────────────────────
-    risk_result = risk_executor_agent.analyze(strat_result, symbol, market_type)
 
-    return {
+    # ── Stage 6: Weighted Consensus Engine ──────────────────────
+    # All agents have spoken. Now compute the mathematically weighted consensus.
+    raw_results = {
         "symbol": symbol,
         "market_type": market_type,
         "agent_1_technical": tech_result,
@@ -64,5 +56,24 @@ def run_pipeline(symbol: str, market_type: str) -> dict:
         "agent_8_optimizer": opt_result,
         "agent_3_strategy": strat_result,
         "agent_6_debate": debate_result,
-        "agent_4_risk_execution": risk_result,
     }
+    
+    consensus = compute_consensus(raw_results)
+    
+    # ── Stage 7: Agent 4 — Risk Guardian (Final Gatekeeper) ─────
+    # Feed the CONSENSUS action (not a single agent's opinion) to the Risk Guardian.
+    # The Risk Guardian has VETO power — it can reject even a unanimous BUY.
+    consensus_proposal = {
+        "action": consensus["consensus_action"],
+        "confidence": consensus["confidence"],
+        "reasoning": f"Weighted Consensus: {consensus['strength']} {consensus['consensus_action']} (Score: {consensus['consensus_score']:.2f})",
+        "stop_loss": strat_result.get("stop_loss"),
+        "take_profit": strat_result.get("take_profit"),
+    }
+    
+    risk_result = risk_executor_agent.analyze(consensus_proposal, symbol, market_type)
+
+    raw_results["consensus"] = consensus
+    raw_results["agent_4_risk_execution"] = risk_result
+    
+    return raw_results
