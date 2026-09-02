@@ -9,11 +9,12 @@ import pandas as pd
 from src import config
 from src.pipeline import run_pipeline
 from src.agents import risk_executor_agent
+from src.connectors.live_ticker import check_volatility, get_recent_alerts
 
 st.set_page_config(page_title="Crypto Market Bot", page_icon="₿", layout="wide")
 
 st.title("₿ Crypto Market Trading Bot")
-st.markdown("Isolated environment tracking **USD Capital** and the **Crypto Watchlist**.")
+st.markdown("**Async DAG Pipeline** · Weighted Consensus · MLOps Monitored")
 
 # ── Portfolio Status ──
 st.subheader("💼 USD Portfolio")
@@ -24,10 +25,17 @@ col2.metric("Daily PNL", f"${portfolio['daily_pnl']:,.2f}")
 col3.metric("Open Positions", portfolio['open_positions'])
 col4.metric("Total Trades", portfolio['total_trades'])
 
+# ── Volatility Alerts ──
+alerts = get_recent_alerts(max_age_hours=6)
+if alerts:
+    st.warning(f"🚨 {len(alerts)} Volatility Alert(s) Detected!")
+    for a in alerts[-3:]:
+        st.caption(a.get("message", ""))
+
 st.divider()
 
 # ── Execution Controls ──
-st.subheader("⚙️ Run 8-Agent Pipeline with Consensus Voting")
+st.subheader("⚙️ Run 8-Agent DAG Pipeline")
 
 tab1, tab2 = st.tabs(["🔍 Analyze Any Custom Crypto", "📋 Scan Entire Watchlist"])
 
@@ -45,7 +53,7 @@ with tab2:
         symbols_to_run = []
 
 if symbols_to_run:
-    with st.spinner("8 Agents are analyzing and voting..."):
+    with st.spinner("8 Agents executing in parallel DAG..."):
         for symbol in symbols_to_run:
             st.markdown(f"### Evaluating `{symbol}`")
             
@@ -61,28 +69,43 @@ if symbols_to_run:
                 debate = res["agent_6_debate"]
                 risk = res["agent_4_risk_execution"]["risk_validation"]
                 consensus = res.get("consensus", {})
+                ml_health = res.get("ml_health", {})
+                pipeline_time = res.get("pipeline_time_seconds", 0)
                 
-                # ── Consensus Score (Hero Metric) ──
+                # Check for volatility spikes
+                current_price = tech.get("latest_price", 0)
+                vol_alert = check_volatility(symbol, current_price, "crypto")
+                if vol_alert:
+                    st.warning(vol_alert["message"])
+                
+                # ── Hero Metrics ──
                 score = consensus.get("consensus_score", 0)
                 action = consensus.get("consensus_action", "HOLD")
                 strength = consensus.get("strength", "WEAK")
-                
                 score_emoji = "🟢" if action == "BUY" else "🔴" if action == "SELL" else "⚪"
                 
-                c1, c2, c3, c4 = st.columns(4)
+                c1, c2, c3, c4, c5 = st.columns(5)
                 c1.metric(f"{score_emoji} Consensus", action, f"Score: {score:.2f}")
                 c2.metric("Strength", strength)
                 c3.metric("Trend", tech["trend"])
                 
+                # ML Health
+                ml_status = ml_health.get("status", "N/A")
+                ml_emoji = "🟢" if ml_status == "HEALTHY" else "🟡" if ml_status == "WARMING_UP" else "🔴"
+                c4.metric(f"{ml_emoji} ML Model", ml_status, ml_health.get("accuracy_pct", "N/A"))
+                
+                # Risk Guardian
                 if risk["approved"]:
-                    c4.metric("Risk Guardian", "✅ APPROVED")
+                    c5.metric("Risk Guardian", "✅ APPROVED")
                 else:
-                    c4.metric("Risk Guardian", "🛑 VETOED")
+                    c5.metric("Risk Guardian", "🛑 VETOED")
+                
+                # Pipeline Speed
+                st.caption(f"⚡ Pipeline completed in **{pipeline_time}s** (Parallel DAG)")
                 
                 # ── Agent Confidence Breakdown ──
                 with st.expander("📊 Agent Confidence Breakdown (How Each Agent Voted)"):
                     votes = consensus.get("agent_votes", {})
-                    
                     if votes:
                         vote_data = []
                         for agent_id, vote in votes.items():
@@ -97,13 +120,21 @@ if symbols_to_run:
                                 "Weighted": f"{signal * weight:+.3f}",
                                 "Details": vote["raw_data"],
                             })
-                        
                         df_votes = pd.DataFrame(vote_data)
                         st.dataframe(df_votes, use_container_width=True, hide_index=True)
-                    
                     st.caption(f"Final Weighted Consensus: **{score:+.4f}** → **{action}** ({strength})")
                 
-                # ── ML & Optimizer Quick View ──
+                # ── MLOps Health Details ──
+                with st.expander(f"{ml_emoji} MLOps Model Health Monitor"):
+                    st.write(ml_health.get("message", "No data yet."))
+                    st.write(f"- **Predictions Logged:** {ml_health.get('predictions_total', 0)}")
+                    st.write(f"- **Predictions Evaluated:** {ml_health.get('predictions_evaluated', 0)}")
+                    st.write(f"- **Current Accuracy:** {ml_health.get('accuracy_pct', 'Warming up...')}")
+                    st.write(f"- **ML Voting Weight:** {ml_health.get('ml_weight', 0.25):.0%}")
+                    if ml_health.get("is_drifted"):
+                        st.error("⚠️ Model drift detected! ML voting weight has been automatically set to 0% to prevent bad predictions.")
+                
+                # ── Quick Stats ──
                 ml_conf = f"{ml.get('confidence', 0):.1%}" if ml.get('action') != 'HOLD' else "N/A"
                 st.write(f"🧠 **ML Brain**: {ml.get('action', 'HOLD')} ({ml_conf}) | "
                          f"📊 **Sentiment**: {sent.get('sentiment_score', 50)}/100 | "

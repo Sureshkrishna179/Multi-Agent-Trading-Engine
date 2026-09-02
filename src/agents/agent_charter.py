@@ -7,8 +7,13 @@ Each agent has a strict Charter (what it owns) and Fence Line (what it must NEVE
 The Weighted Consensus Engine combines all agent signals into a single mathematically
 weighted score for superior decision-making.
 
+MLOps Integration: Dynamically adjusts ML Agent weight based on model health.
+If model drift is detected, ML weight drops to 0% automatically.
+
 Cost: $0 — Pure Python math, no external APIs.
 """
+
+from src.agents.ml_monitor import get_model_health
 
 
 # ─── Agent Charters ─────────────────────────────────────────────
@@ -156,15 +161,22 @@ def compute_consensus(pipeline_result: dict) -> dict:
         "raw_data": f"Judge: {debate.get('final_action', 'HOLD')}, Confidence: {debate_conf:.1%}",
     }
     
-    # ── Agent 7: ML Brain ──
+    # ── Agent 7: ML Brain (with MLOps Drift Check) ──
     ml = pipeline_result.get("agent_7_ml", {})
     ml_signal = _action_to_signal(ml.get("action", "HOLD"))
     ml_conf = ml.get("confidence", 0.0)
+    
+    # MLOps: Dynamically adjust weight based on model health
+    ml_health = get_model_health()
+    dynamic_ml_weight = ml_health.get("ml_weight", CHARTERS["agent_7_ml"]["weight"])
+    ml_status = ml_health.get("status", "HEALTHY")
+    ml_accuracy = ml_health.get("accuracy_pct", "N/A")
+    
     agent_votes["agent_7_ml"] = {
-        "signal": ml_signal * max(ml_conf, 0.5),  # ML always contributes at least half weight
-        "weight": CHARTERS["agent_7_ml"]["weight"],
-        "name": CHARTERS["agent_7_ml"]["name"],
-        "raw_data": f"Action: {ml.get('action', 'HOLD')}, Bull: {ml.get('prob_bull', 0):.1%}, Bear: {ml.get('prob_bear', 0):.1%}",
+        "signal": ml_signal * max(ml_conf, 0.5),
+        "weight": dynamic_ml_weight,  # 0% if drifted, 25% if healthy
+        "name": f"ML Brain ({ml_status})",
+        "raw_data": f"Action: {ml.get('action', 'HOLD')}, Bull: {ml.get('prob_bull', 0):.1%}, Bear: {ml.get('prob_bear', 0):.1%} | Health: {ml_status} ({ml_accuracy})",
     }
     
     # ── Agent 8: Optimizer ──
