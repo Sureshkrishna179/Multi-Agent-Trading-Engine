@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 from src import config
 
 
-def _get_exchange(exchange_name: str = "binance") -> ccxt.Exchange:
+def _get_exchange(exchange_name: str = "kucoin") -> ccxt.Exchange:
     """
     Initialize and return a CCXT exchange instance.
 
@@ -48,7 +48,7 @@ def _get_exchange(exchange_name: str = "binance") -> ccxt.Exchange:
 
 def fetch_ohlcv(
     symbol: str,
-    exchange_name: str = "binance",
+    exchange_name: str = "kucoin",
     timeframe: str = "1d",
     limit: int = 60,
 ) -> pd.DataFrame:
@@ -57,7 +57,7 @@ def fetch_ohlcv(
 
     Args:
         symbol: Trading pair (e.g. "BTC/USDT", "ETH/USDT").
-        exchange_name: Exchange to fetch from (default: "binance").
+        exchange_name: Exchange to fetch from (default: "kucoin").
         timeframe: Candle interval — "1d", "4h", "1h", "15m", "5m".
         limit: Number of candles to fetch (max varies by exchange).
 
@@ -81,7 +81,7 @@ def fetch_ohlcv(
 
 def get_current_price(
     symbol: str,
-    exchange_name: str = "binance",
+    exchange_name: str = "kucoin",
 ) -> float:
     """
     Get the latest ticker price for a crypto trading pair.

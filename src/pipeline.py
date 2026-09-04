@@ -123,12 +123,36 @@ def run_pipeline(symbol: str, market_type: str) -> dict:
     # PHASE 5: AGENT 4 — RISK GUARDIAN (Final Gatekeeper)
     # Has absolute VETO power over any trade.
     # ══════════════════════════════════════════════════════════════
+    # Fallback stop-loss generator
+    # If ML/Sentiment force a BUY/SELL consensus, but Strategy agent was HOLD,
+    # Strategy agent won't provide a stop-loss. We must generate one so Risk Guardian doesn't veto.
+    stop_loss = strat_result.get("stop_loss")
+    take_profit = strat_result.get("take_profit")
+    
+    if not stop_loss and consensus["consensus_action"] in ["BUY", "SELL"]:
+        atr = tech_result.get("indicators", {}).get("atr_14")
+        if atr:
+            if consensus["consensus_action"] == "BUY":
+                stop_loss = current_price - (atr * 2)
+                take_profit = current_price + (atr * 4)
+            else:
+                stop_loss = current_price + (atr * 2)
+                take_profit = current_price - (atr * 4)
+        else:
+            # Fallback to simple 2% stop if ATR is unavailable
+            if consensus["consensus_action"] == "BUY":
+                stop_loss = current_price * 0.98
+                take_profit = current_price * 1.04
+            else:
+                stop_loss = current_price * 1.02
+                take_profit = current_price * 0.96
+
     consensus_proposal = {
         "action": consensus["consensus_action"],
         "confidence": consensus["confidence"],
         "reasoning": f"Weighted Consensus: {consensus['strength']} {consensus['consensus_action']} (Score: {consensus['consensus_score']:.2f})",
-        "stop_loss": strat_result.get("stop_loss"),
-        "take_profit": strat_result.get("take_profit"),
+        "stop_loss": stop_loss,
+        "take_profit": take_profit,
     }
     
     risk_result = risk_executor_agent.analyze(consensus_proposal, symbol, market_type)
