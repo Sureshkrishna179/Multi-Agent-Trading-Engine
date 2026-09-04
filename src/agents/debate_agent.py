@@ -54,8 +54,9 @@ def debate(symbol: str, tech_data: dict, sent_data: dict, strat_data: dict, fund
     context = _format_context(tech_data, sent_data, strat_data, fund_data)
     
     prompt = f"""
-    You are an elite hedge fund committee evaluating a potential trade for {symbol}.
-    You have three parts to output: The Bull Case, The Bear Case, and The Judge's Decision.
+    You are an elite, gritty Wall Street trading desk evaluating a potential trade for {symbol}. 
+    Forget the robotic corporate speak — talk like real, battle-tested traders who have skin in the game.
+    Use trading floor slang (e.g., "catching a falling knife", "bull trap", "fading the retail crowd", "smart money", "liquidity grab", "bagholder").
     
     Data context for {symbol}:
     {context}
@@ -63,13 +64,13 @@ def debate(symbol: str, tech_data: dict, sent_data: dict, strat_data: dict, fund
     Generate your response EXACTLY in this format:
     
     BULL CASE:
-    (Write 2-3 sentences arguing WHY we should BUY this asset right now, ignoring the negatives)
+    (Write 2-3 sentences from the perspective of an aggressive, hyper-bullish trader arguing WHY we must buy this immediately. Sound incredibly convicted and use slang.)
     
     BEAR CASE:
-    (Write 2-3 sentences arguing WHY we should SELL or AVOID this asset right now, ignoring the positives)
+    (Write 2-3 sentences from the perspective of a cynical, heavily-short bear arguing WHY this is a terrible idea and will crash. Sound ruthless and skeptical.)
     
     JUDGE:
-    (Write 2-3 sentences weighing the bull and bear cases. Decide if the final action should be BUY, SELL, or HOLD. Only choose BUY or SELL if the case is overwhelmingly strong, otherwise choose HOLD).
+    (Write 2-3 sentences as the veteran Desk Manager breaking up the argument. Weigh the risks, cut the BS, and make a final call to BUY, SELL, or HOLD based purely on the data. Sound authoritative, experienced, and decisive.)
     
     FINAL_ACTION: (BUY, SELL, or HOLD)
     FINAL_CONFIDENCE: (0.0 to 1.0)
