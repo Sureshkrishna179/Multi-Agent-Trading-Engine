@@ -101,12 +101,17 @@ INDIAN_WATCHLIST = [
     "TCS.NS",
     "HDFCBANK.NS",
     "INFY.NS",
-    "TATASTEEL.NS",
     "ICICIBANK.NS",
     "SBIN.NS",
     "BHARTIARTL.NS",
     "ITC.NS",
-    "WIPRO.NS",
+    "LARSEN.NS",
+    "KOTAKBANK.NS",
+    "AXISBANK.NS",
+    "MARUTI.NS",
+    "HINDUNILVR.NS",
+    "ASIANPAINT.NS",
+    "BAJFINANCE.NS"
 ]
 
 CRYPTO_WATCHLIST = [
@@ -115,6 +120,11 @@ CRYPTO_WATCHLIST = [
     "SOL/USDT",
     "XRP/USDT",
     "BNB/USDT",
+    "ADA/USDT",
+    "AVAX/USDT",
+    "DOGE/USDT",
+    "LINK/USDT",
+    "MATIC/USDT"
 ]
 
 
