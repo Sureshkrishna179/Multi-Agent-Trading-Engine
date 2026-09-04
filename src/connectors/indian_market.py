@@ -29,13 +29,9 @@ def fetch_ohlcv(
     Returns:
         DataFrame with columns: Open, High, Low, Close, Volume, indexed by Date.
     """
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=period_days)
-
     ticker = yf.Ticker(symbol)
     df = ticker.history(
-        start=start_date.strftime("%Y-%m-%d"),
-        end=end_date.strftime("%Y-%m-%d"),
+        period=f"{period_days}d",
         interval=interval,
     )
 
