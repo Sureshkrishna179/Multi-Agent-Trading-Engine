@@ -80,6 +80,8 @@ def _action_to_signal(action: str) -> float:
         return 1.0
     elif action in ("SELL", "STRONG_SELL", "BEARISH"):
         return -1.0
+    elif action == "ABSTAIN":
+        return 0.0  # Treated as no vote — weight will also be zeroed out
     else:
         return 0.0
 
@@ -141,13 +143,25 @@ def compute_consensus(pipeline_result: dict) -> dict:
     }
     
     # ── Agent 5: Fundamental ──
+    # For crypto, fundamental_agent returns score=0.0 and label="NEUTRAL" because
+    # P/E / Debt-to-Equity don't exist for BTC/SOL. If we let this vote at full
+    # weight it anchors the consensus toward HOLD on every crypto scan.
+    # Fix: detect the crypto neutral and zero-out the weight so it abstains.
     fund = pipeline_result.get("agent_5_fundamental", {})
+    fund_label = fund.get("label", "")
+    is_fund_abstaining = (fund_label in ("NEUTRAL", "UNKNOWN") and
+                          fund.get("reasoning", "").startswith("Crypto fundamentals"))
     fund_signal = _action_to_signal(fund.get("recommendation", "HOLD"))
+    fund_effective_weight = 0.0 if is_fund_abstaining else CHARTERS["agent_5_fundamental"]["weight"]
     agent_votes["agent_5_fundamental"] = {
         "signal": fund_signal * 0.7,  # Fundamentals are slower-moving, dampen slightly
-        "weight": CHARTERS["agent_5_fundamental"]["weight"],
+        "weight": fund_effective_weight,
         "name": CHARTERS["agent_5_fundamental"]["name"],
-        "raw_data": f"Recommendation: {fund.get('recommendation', 'N/A')}",
+        "raw_data": (
+            "Abstaining (crypto — no P/E data)"
+            if is_fund_abstaining
+            else f"Recommendation: {fund.get('recommendation', 'N/A')}"
+        ),
     }
     
     # ── Agent 6: Debate Judge ──

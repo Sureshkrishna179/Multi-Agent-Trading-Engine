@@ -14,13 +14,15 @@ def analyze(symbol: str, market_type: str = "indian") -> dict:
     """
     print(f"\n📊 Agent 5: Analyzing Fundamentals for {symbol}...")
     
-    # If Crypto, fundamentals are mostly network metrics (TVL, active addresses).
-    # Since we are using yfinance for now, we'll return a neutral fundamental score for crypto.
+    # Crypto tickers have no P/E, Debt-to-Equity, or revenue metrics.
+    # Return explicit abstention so the Consensus Engine can zero-out this vote
+    # instead of letting a phantom 0.0 score anchor crypto signals toward HOLD.
     if market_type == "crypto":
         return {
             "score": 0.0,
             "label": "NEUTRAL",
             "reasoning": "Crypto fundamentals require on-chain data. Neutral default applied.",
+            "recommendation": "ABSTAIN",   # <-- Consensus Engine detects this and skips
             "metrics": {}
         }
         
