@@ -38,6 +38,12 @@ def analyze(symbol: str, market_type: str = "indian") -> Dict[str, Any]:
         res = source.evaluate(symbol, market_type)
         results.append(res)
         
+        # Skip sources that returned no live data (score=None)
+        # This prevents phantom 50.0 neutrals from diluting the consensus.
+        if res.get("score") is None:
+            print(f"        ⚠️ {source.name}: No live data — excluded from scoring.")
+            continue
+        
         cat = res["category"]
         if cat not in category_scores:
             category_scores[cat] = 0.0
@@ -77,11 +83,20 @@ def analyze(symbol: str, market_type: str = "indian") -> Dict[str, Any]:
     elif final_score > 60:
         sentiment_label = "BULLISH"
         
+    live_sources = [r for r in results if r.get("score") is not None]
+    dead_sources = [r["source"] for r in results if r.get("score") is None]
+
     return {
         "sentiment_score": round(final_score, 2),
         "sentiment_label": sentiment_label,
         "category_breakdown": final_category_scores,
         "sources_polled": len(results),
+        "live_sources": len(live_sources),
+        "blocked_sources": dead_sources,  # Transparent: show which scrapers had no data
         "headlines_analyzed": sum(r.get("data_points", 0) for r in results),
-        "narrative_summary": f"Aggregated {len(results)} sources. Score: {final_score:.1f}/100. Label: {sentiment_label}"
+        "narrative_summary": (
+            f"Live data from {len(live_sources)}/{len(results)} sources. "
+            f"Score: {final_score:.1f}/100. Label: {sentiment_label}. "
+            + (f"Blocked/Empty: {', '.join(dead_sources)}." if dead_sources else "All sources live.")
+        )
     }

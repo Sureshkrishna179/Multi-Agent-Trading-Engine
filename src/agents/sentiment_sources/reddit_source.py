@@ -49,7 +49,9 @@ class RedditSource(BaseSentimentSource):
     def analyze_sentiment(self, data: dict) -> float:
         posts = data.get("items", [])
         if not posts:
-            return 50.0
+            # Return None so the aggregator knows this source had NO data,
+            # rather than silently injecting a neutral 50.0 that skews the score.
+            return None
             
         # Basic scoring: weight by upvote ratio.
         # High upvote ratio = community agrees with the sentiment.

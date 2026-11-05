@@ -35,12 +35,20 @@ class BaseSentimentSource(ABC):
     def evaluate(self, symbol: str, market_type: str = "indian") -> Dict[str, Any]:
         """
         Main pipeline: fetches data and computes the score.
+        Returns score=None when the source has no live data, so the aggregator
+        can exclude it rather than inject a phantom 50.0 neutral into the final score.
         """
         try:
             data = self.fetch_data(symbol, market_type)
-            # If no data found, return neutral 50
+            # If no data found, mark as unavailable — do NOT default to 50
             if not data or data.get("count", 0) == 0:
-                return {"score": 50.0, "source": self.name, "category": self.category, "data_points": 0}
+                return {
+                    "score": None,  # Explicitly None → aggregator will skip this source
+                    "source": self.name,
+                    "category": self.category,
+                    "data_points": 0,
+                    "status": "NO_DATA"
+                }
                 
             score = self.analyze_sentiment(data)
             
@@ -48,11 +56,18 @@ class BaseSentimentSource(ABC):
                 "score": score,
                 "source": self.name,
                 "category": self.category,
-                "data_points": data.get("count", len(data.get("items", [])))
+                "data_points": data.get("count", len(data.get("items", []))),
+                "status": "OK"
             }
         except Exception as e:
             print(f"Error in {self.name} evaluating {symbol}: {e}")
-            return {"score": 50.0, "source": self.name, "category": self.category, "data_points": 0, "error": str(e)}
+            return {
+                "score": None,  # Also None on error — don't fake a neutral score
+                "source": self.name,
+                "category": self.category,
+                "data_points": 0,
+                "status": f"ERROR: {e}"
+            }
 
 
 class SentimentSourceRegistry:

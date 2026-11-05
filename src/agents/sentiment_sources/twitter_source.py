@@ -48,7 +48,9 @@ class TwitterSource(BaseSentimentSource):
     def analyze_sentiment(self, data: dict) -> float:
         tweets = data.get("items", [])
         if not tweets:
-            return 50.0
+            # Return None so the aggregator knows this source had NO data,
+            # rather than silently injecting a neutral 50.0 that skews the score.
+            return None
             
         # Basic lexical scoring similar to NewsRSS
         # A production bot would pass these through an LLM for precise intent.

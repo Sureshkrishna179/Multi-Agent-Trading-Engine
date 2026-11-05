@@ -14,7 +14,7 @@ from src.agents.strategies import StrategyRegistry
 
 CACHE_DIR = ".cache"
 CACHE_FILE = os.path.join(CACHE_DIR, "optimizer_cache.json")
-CACHE_TTL = 12 * 3600  # 12 hours in seconds
+CACHE_TTL = 24 * 3600  # 24 hours — backtests run once a day, not every scan
 
 def _load_cache() -> dict | None:
     if os.path.exists(CACHE_FILE):
