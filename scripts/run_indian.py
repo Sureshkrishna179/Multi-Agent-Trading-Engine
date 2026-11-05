@@ -31,3 +31,4 @@ if __name__ == "__main__":
             print(f"Error processing {symbol}: {e}")
 
     print("\n✅ Indian Market Scan Complete.")
+
