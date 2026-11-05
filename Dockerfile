@@ -13,11 +13,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code including prebuilt React frontend in frontend/dist
 COPY . .
 
-# Expose Streamlit default port
-EXPOSE 8501
+# Expose FastAPI port (8000) and Streamlit fallback (8501)
+EXPOSE 8000 8501
 
-# Default command: Runs the Streamlit Terminal Dashboard
-CMD ["streamlit", "run", "src/interfaces/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Default command: Runs the FastAPI server serving the React Terminal UI & WebSocket
+CMD ["python", "src/api_server.py"]

@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #080810;
+    color: #e2e8f0;
+  }
+}
+
+/* Custom Scrollbar for Terminal aesthetic */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #080810;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f1f30;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2d2d48;
+}
+
+/* Monospace text */
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Glassmorphism card */
+.glass-panel {
+  background: #0d0d1a;
+  border: 1px solid #1a1a2e;
+  backdrop-filter: blur(12px);
+}
+
+.glass-panel-hover:hover {
+  border-color: #2e2e4a;
+}
+

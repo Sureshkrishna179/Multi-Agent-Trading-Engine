@@ -1,12 +1,12 @@
 version: '3.8'
 
 services:
-  # 1. Interactive Dark Web Dashboard (Port 8501)
-  dashboard:
+  # 1. Professional React / FastAPI Terminal (Port 8000)
+  terminal:
     build: .
     restart: always
     ports:
-      - "8501:8501"
+      - "8000:8000"
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - EXECUTION_MODE=PAPER
