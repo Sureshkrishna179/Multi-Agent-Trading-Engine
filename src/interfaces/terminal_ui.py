@@ -571,3 +571,4 @@ def render_vol_alert(msg: str):
 
 def render_stock_divider(symbol: str):
     st.markdown(f'<div class="stock-header">{symbol}</div>', unsafe_allow_html=True)
+

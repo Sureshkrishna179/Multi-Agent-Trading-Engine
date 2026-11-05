@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  # 1. Interactive Dark Web Dashboard (Port 8501)
+  dashboard:
+    build: .
+    restart: always
+    ports:
+      - "8501:8501"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - EXECUTION_MODE=PAPER
+    volumes:
+      - ./.cache:/app/.cache
+
+  # 2. 24/7 Autonomous Background Scanner (Scans every 15 min even if nobody is on the website)
+  daemon:
+    build: .
+    restart: always
+    command: ["python", "daemon.py"]
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - EXECUTION_MODE=PAPER
+    volumes:
+      - ./.cache:/app/.cache
