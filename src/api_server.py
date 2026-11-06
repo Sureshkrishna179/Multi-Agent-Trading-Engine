@@ -231,23 +231,21 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 # ── Static Web Dashboard Hosting ──────────────────────────────────────────────
-# Serve the compiled modern frontend directly from public/ if it exists
-frontend_dir = root_dir / "frontend" / "dist"
-if not frontend_dir.exists():
-    frontend_dir = root_dir / "frontend"
+frontend_dist = root_dir / "frontend" / "dist"
+assets_dir = frontend_dist / "assets"
 
-if frontend_dir.exists():
-    app.mount("/static", StaticFiles(directory=str(frontend_dir)), name="static")
+if assets_dir.exists():
+    app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
 
-    @app.get("/")
-    def serve_frontend():
-        index_file = frontend_dir / "index.html"
-        if index_file.exists():
-            return FileResponse(index_file)
-        return {"message": "API Server Running. Frontend available at /docs"}
+@app.get("/")
+def serve_frontend():
+    index_file = frontend_dist / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+    return {"message": "API Server Running. Interactive Docs at /docs"}
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("src.api_server:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
