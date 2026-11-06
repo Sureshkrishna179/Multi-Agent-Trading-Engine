@@ -77,11 +77,21 @@ def debate(symbol: str, tech_data: dict, sent_data: dict, strat_data: dict, fund
     """
     
     try:
-        response = client.models.generate_content(
-            model='gemini-3.6-flash',
-            contents=prompt,
-        )
-        
+        response = None
+        for model_name in ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']:
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                )
+                if response and response.text:
+                    break
+            except Exception:
+                continue
+
+        if not response or not response.text:
+            raise RuntimeError("Gemini API call returned empty response across available flash models.")
+
         text = response.text
         
         # Parse the structured response
