@@ -76,12 +76,13 @@ def health_check():
 
 
 @app.get("/api/portfolio")
-def get_portfolio(market: str = Query("indian", enum=["indian", "crypto"])):
+def get_portfolio(market: str = Query("indian")):
     """Returns available capital, PnL, open positions, and trade history."""
-    status = risk_executor_agent.get_portfolio_status(market)
-    currency = "₹" if market == "indian" else "$"
+    clean_market = market.lower() if market in ("indian", "crypto") else "indian"
+    status = risk_executor_agent.get_portfolio_status(clean_market)
+    currency = "₹" if clean_market == "indian" else "$"
     return {
-        "market": market,
+        "market": clean_market,
         "currency": currency,
         "available_capital": status["available_capital"],
         "daily_pnl": status["daily_pnl"],
