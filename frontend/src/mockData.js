@@ -10,14 +10,29 @@ export const MOCK_WATCHLISTS = {
     { symbol: "TCS.NS", name: "Tata Consultancy", price: 4125.00, change: -0.65, market: "NSE", currency: "₹" },
     { symbol: "HDFCBANK.NS", name: "HDFC Bank", price: 1682.30, change: +0.92, market: "NSE", currency: "₹" },
     { symbol: "INFY.NS", name: "Infosys Ltd", price: 1854.10, change: +2.15, market: "NSE", currency: "₹" },
-    { symbol: "ICICIBANK.NS", name: "ICICI Bank", price: 1245.80, change: +0.45, market: "NSE", currency: "₹" }
+    { symbol: "ICICIBANK.NS", name: "ICICI Bank", price: 1245.80, change: +0.45, market: "NSE", currency: "₹" },
+    { symbol: "SBIN.NS", name: "State Bank of India", price: 812.40, change: +1.20, market: "NSE", currency: "₹" },
+    { symbol: "BHARTIARTL.NS", name: "Bharti Airtel", price: 1590.20, change: +0.75, market: "NSE", currency: "₹" },
+    { symbol: "ITC.NS", name: "ITC Limited", price: 478.50, change: -0.30, market: "NSE", currency: "₹" },
+    { symbol: "LARSEN.NS", name: "Larsen & Toubro", price: 3640.00, change: +1.40, market: "NSE", currency: "₹" },
+    { symbol: "KOTAKBANK.NS", name: "Kotak Mahindra Bank", price: 1780.00, change: +0.60, market: "NSE", currency: "₹" },
+    { symbol: "AXISBANK.NS", name: "Axis Bank", price: 1165.00, change: +0.85, market: "NSE", currency: "₹" },
+    { symbol: "MARUTI.NS", name: "Maruti Suzuki", price: 11250.00, change: -1.10, market: "NSE", currency: "₹" },
+    { symbol: "HINDUNILVR.NS", name: "Hindustan Unilever", price: 2380.00, change: -0.45, market: "NSE", currency: "₹" },
+    { symbol: "ASIANPAINT.NS", name: "Asian Paints", price: 2850.00, change: +0.30, market: "NSE", currency: "₹" },
+    { symbol: "BAJFINANCE.NS", name: "Bajaj Finance", price: 6890.00, change: +2.40, market: "NSE", currency: "₹" }
   ],
   crypto: [
     { symbol: "BTC/USDT", name: "Bitcoin", price: 89450.00, change: +3.42, market: "CRYPTO", currency: "$" },
     { symbol: "ETH/USDT", name: "Ethereum", price: 3480.20, change: +1.15, market: "CRYPTO", currency: "$" },
     { symbol: "SOL/USDT", name: "Solana", price: 204.60, change: +6.85, market: "CRYPTO", currency: "$" },
     { symbol: "XRP/USDT", name: "Ripple", price: 2.14, change: +4.20, market: "CRYPTO", currency: "$" },
-    { symbol: "BNB/USDT", name: "BNB Chain", price: 642.50, change: -0.30, market: "CRYPTO", currency: "$" }
+    { symbol: "BNB/USDT", name: "BNB Chain", price: 642.50, change: -0.30, market: "CRYPTO", currency: "$" },
+    { symbol: "ADA/USDT", name: "Cardano", price: 0.78, change: +2.10, market: "CRYPTO", currency: "$" },
+    { symbol: "AVAX/USDT", name: "Avalanche", price: 34.50, change: +5.30, market: "CRYPTO", currency: "$" },
+    { symbol: "DOGE/USDT", name: "Dogecoin", price: 0.38, change: +8.40, market: "CRYPTO", currency: "$" },
+    { symbol: "LINK/USDT", name: "Chainlink", price: 18.20, change: +1.90, market: "CRYPTO", currency: "$" },
+    { symbol: "MATIC/USDT", name: "Polygon", price: 0.54, change: +0.80, market: "CRYPTO", currency: "$" }
   ]
 };
 
