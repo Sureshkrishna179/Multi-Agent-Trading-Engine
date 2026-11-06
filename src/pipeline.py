@@ -24,7 +24,7 @@ from src.agents.agent_charter import compute_consensus
 from src.agents.ml_monitor import log_prediction, get_model_health
 
 
-def run_pipeline(symbol: str, market_type: str) -> dict:
+def run_pipeline(symbol: str, market_type: str, df=None, current_price: float = None) -> dict:
     """
     Execute the full 8-agent trading pipeline using DAG-based parallel execution.
     
@@ -37,14 +37,19 @@ def run_pipeline(symbol: str, market_type: str) -> dict:
     pipeline_start = time.time()
     
     # ══════════════════════════════════════════════════════════════
-    # PHASE 0: DATA INGESTION
+    # PHASE 0: DATA INGESTION (Reuse pre-fetched data if provided)
     # ══════════════════════════════════════════════════════════════
-    if market_type == "indian":
-        df = indian_market.fetch_ohlcv(symbol, period_days=60)
-        current_price = indian_market.get_current_price(symbol)
-    else:
-        df = crypto_market.fetch_ohlcv(symbol, timeframe="1d", limit=60)
-        current_price = crypto_market.get_current_price(symbol)
+    if df is None:
+        if market_type == "indian":
+            df = indian_market.fetch_ohlcv(symbol, period_days=60)
+            if current_price is None:
+                current_price = indian_market.get_current_price(symbol)
+        else:
+            df = crypto_market.fetch_ohlcv(symbol, timeframe="1d", limit=60)
+            if current_price is None:
+                current_price = crypto_market.get_current_price(symbol)
+    elif current_price is None and df is not None and not df.empty:
+        current_price = float(df["close"].iloc[-1])
 
     # ══════════════════════════════════════════════════════════════
     # PHASE 1: PARALLEL AGENT EXECUTION (Non-blocking DAG Layer)

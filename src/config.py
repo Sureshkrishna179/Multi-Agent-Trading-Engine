@@ -65,6 +65,12 @@ DEFAULT_SL_PERCENT   = 0.05  # 5% stop-loss from entry (fallback)
 DEFAULT_TP_PERCENT   = 0.10  # 10% take-profit from entry (1:2 R:R)
 
 
+# ── Screener Settings ──────────────────────────────────────────
+SCREENER_TOP_N = 5             # Number of top picks to send to the full 8-agent pipeline
+SCREENER_MIN_VOLUME_RATIO = 1.2  # Volume must be 1.2x the 20-day average to qualify
+SCREENER_MIN_MOVE_PCT = 0.5    # Minimum absolute % move today to qualify
+
+
 # ── API Keys ────────────────────────────────────────────────────
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
@@ -95,8 +101,9 @@ REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT", "TradingBot/1.0")
 TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN", "")
 
 
-# ── Default Watchlists ─────────────────────────────────────────
+# ── Default Watchlists (50 Indian Stocks + 50 Crypto Coins) ────
 INDIAN_WATCHLIST = [
+    # ── Nifty 50 Core ──
     "RELIANCE.NS",
     "TCS.NS",
     "HDFCBANK.NS",
@@ -105,16 +112,58 @@ INDIAN_WATCHLIST = [
     "SBIN.NS",
     "BHARTIARTL.NS",
     "ITC.NS",
-    "LARSEN.NS",
+    "LT.NS",
     "KOTAKBANK.NS",
     "AXISBANK.NS",
     "MARUTI.NS",
     "HINDUNILVR.NS",
     "ASIANPAINT.NS",
-    "BAJFINANCE.NS"
+    "BAJFINANCE.NS",
+    # ── Large Cap Diversified ──
+    "TATAMOTORS.NS",
+    "SUNPHARMA.NS",
+    "TITAN.NS",
+    "ULTRACEMCO.NS",
+    "WIPRO.NS",
+    "HCLTECH.NS",
+    "NTPC.NS",
+    "POWERGRID.NS",
+    "ONGC.NS",
+    "COALINDIA.NS",
+    # ── Banking & Financial ──
+    "BAJAJFINSV.NS",
+    "INDUSINDBK.NS",
+    "BANKBARODA.NS",
+    "PNB.NS",
+    "SBILIFE.NS",
+    # ── Auto & Industrial ──
+    "TATASTEEL.NS",
+    "JSWSTEEL.NS",
+    "HINDALCO.NS",
+    "M&M.NS",
+    "HEROMOTOCO.NS",
+    # ── IT & Tech ──
+    "TECHM.NS",
+    "LTIM.NS",
+    "PERSISTENT.NS",
+    "COFORGE.NS",
+    "MPHASIS.NS",
+    # ── Pharma & Healthcare ──
+    "DRREDDY.NS",
+    "CIPLA.NS",
+    "DIVISLAB.NS",
+    "APOLLOHOSP.NS",
+    "MAXHEALTH.NS",
+    # ── FMCG & Consumer ──
+    "NESTLEIND.NS",
+    "BRITANNIA.NS",
+    "DABUR.NS",
+    "GODREJCP.NS",
+    "TATACONSUM.NS",
 ]
 
 CRYPTO_WATCHLIST = [
+    # ── Top 10 by Market Cap ──
     "BTC/USDT",
     "ETH/USDT",
     "SOL/USDT",
@@ -124,7 +173,53 @@ CRYPTO_WATCHLIST = [
     "AVAX/USDT",
     "DOGE/USDT",
     "LINK/USDT",
-    "MATIC/USDT"
+    "DOT/USDT",
+    # ── Layer 1 Blockchains ──
+    "MATIC/USDT",
+    "NEAR/USDT",
+    "ATOM/USDT",
+    "SUI/USDT",
+    "APT/USDT",
+    "SEI/USDT",
+    "TIA/USDT",
+    "INJ/USDT",
+    "FTM/USDT",
+    "ALGO/USDT",
+    # ── DeFi ──
+    "UNI/USDT",
+    "AAVE/USDT",
+    "MKR/USDT",
+    "CRV/USDT",
+    "SUSHI/USDT",
+    "COMP/USDT",
+    "SNX/USDT",
+    "DYDX/USDT",
+    "1INCH/USDT",
+    "LDO/USDT",
+    # ── AI & Compute ──
+    "FET/USDT",
+    "RENDER/USDT",
+    "TAO/USDT",
+    "ARKM/USDT",
+    "AKT/USDT",
+    # ── Gaming & Metaverse ──
+    "IMX/USDT",
+    "GALA/USDT",
+    "AXS/USDT",
+    "SAND/USDT",
+    "MANA/USDT",
+    # ── Meme Coins ──
+    "SHIB/USDT",
+    "PEPE/USDT",
+    "WIF/USDT",
+    "BONK/USDT",
+    "FLOKI/USDT",
+    # ── Infrastructure & Oracles ──
+    "FIL/USDT",
+    "AR/USDT",
+    "GRT/USDT",
+    "PYTH/USDT",
+    "TRX/USDT",
 ]
 
 

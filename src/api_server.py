@@ -21,6 +21,7 @@ if str(root_dir) not in sys.path:
 
 from src import config
 from src.pipeline import run_pipeline
+from src.screener import screen_universe
 from src.agents import risk_executor_agent
 from src.connectors import indian_market, crypto_market
 from src.connectors.live_ticker import check_volatility, get_recent_alerts
@@ -99,6 +100,21 @@ def get_watchlists():
         "indian": config.INDIAN_WATCHLIST,
         "crypto": config.CRYPTO_WATCHLIST
     }
+
+
+@app.get("/api/screen")
+async def get_screened_universe(market: str = Query("indian"), top_n: int = Query(5)):
+    """Fast 3-step funnel screener across 50+ tickers."""
+    clean_market = market.lower() if market in ("indian", "crypto") else "indian"
+    loop = asyncio.get_event_loop()
+    picks = await loop.run_in_executor(None, screen_universe, clean_market, top_n)
+    # Strip DataFrame objects before JSON serialization
+    serialized = []
+    for p in picks:
+        c = dict(p)
+        c.pop("df", None)
+        serialized.append(c)
+    return {"market": clean_market, "top_picks": serialized}
 
 
 @app.get("/api/alerts")
